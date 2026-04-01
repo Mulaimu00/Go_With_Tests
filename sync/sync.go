@@ -12,6 +12,6 @@ func (c *Counter) Inc() {
 	defer c.mu.Unlock()
 	c.value++
 }
-func (c Counter) Value() int {
+func (c *Counter) Value() int {
 	return c.value
 }
