@@ -24,6 +24,9 @@ func Fetch(ctx context.Context, url string) ([]byte, error) {
 	resp, err := http.DefaultClient.Do(req)
 	
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded){
+			return nil, ErrTimeout
+		}
 		return  nil, err
 	}
 	defer resp.Body.Close()

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestFetch(t *testing.T) {
@@ -36,6 +37,29 @@ func TestFetch(t *testing.T) {
 		}
 		if !errors.Is(err, ErrCancelled) {
 			t.Fatalf("expected %v, got %v", ErrCancelled, err)
+		}
+	})
+	t.Run("times out when server is slow", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			select{
+			case <- ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+				fmt.Fprint(w, "too late")
+			}
+		}))
+		defer server.Close()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		defer cancel()
+
+		got, err := Fetch(ctx, server.URL)
+		if got != nil {
+			t.Error("expected no output")
+		}
+		if !errors.Is(err, ErrTimeout) {
+			t.Fatalf("expected %v, got %v", ErrTimeout, err)
 		}
 	})
 }
