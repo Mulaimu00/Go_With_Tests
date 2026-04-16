@@ -1,12 +1,17 @@
 package main
-
+//Contains code for build application chapter
 import (
-	"learnGoWithTests/mocking"
-	"os"
-	"time"
+	"log"
+	"net/http"
+	server "learnGoWithTests/buildApp"
 )
+type InMemoryPlayerStore struct{}
+
+func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
+	return 123
+}
 
 func main() {
-	sleeper := mocking.NewConfigurableSleeper(1*time.Second, time.Sleep)
-	mocking.Countdown(os.Stdout, sleeper)
+	s := server.NewPlayerServer(&InMemoryPlayerStore{})
+	log.Fatal(http.ListenAndServe(":5000", s))
 }
